@@ -5,9 +5,9 @@ from chat_app.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('logout',logout_page),
-    path('main',main),
-    path('api/authenticate',authenticate),
-    path('api/sampleapi',sample_api)
+    path('api/login',login_page),
+    path('api/register',register_page),
+    path('api/main',sample_api),
+    path('',show_page)
 
 ]
