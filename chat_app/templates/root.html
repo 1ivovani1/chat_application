@@ -12,38 +12,42 @@
     
         <div id="root"> 
       
-            <form v-if='active_state == "login" ' class='border border-primary' style="width: 100%;max-width: 330px;padding: 15px;margin: auto;display:flex;align-items:center;flex-direction:column;justify-content:center;background:white; border-radius:15px;" method="POST">
+            <form v-if='active_state == "login"' onsubmit='return false' class='border border-primary' style="width: 100%;max-width: 330px;padding: 15px;margin: auto;display:flex;align-items:center;flex-direction:column;justify-content:center;background:white; border-radius:15px;" method="POST">
                 
              <h1 class="h3 mb-3 font-weight-normal">Войдите,чтобы продолжить!</h1>
-            <input type="text" name="username"  class="form-control" placeholder="Логин" required="" autofocus="">
-            <input type="password" name="password" id="inputPassword" class="form-control mt-2" placeholder="Пароль" required="">
+            <input type="text" name="username" v-model='login_form.login' class="form-control" placeholder="Логин" required="" autofocus="">
+            <input type="password" name="password" v-model='login_form.password' id="inputPassword" class="form-control mt-2" placeholder="Пароль" required="">
             
     
       
-            <button class="btn btn-lg btn-primary btn-block mt-2" type="submit">Войти</button>
-            <button class="btn btn-lg btn-success btn-block mt-1" @click='change_state_to_reg()'>Регистрация</button>
+            <button class="btn btn-lg btn-primary btn-block mt-2" @click='login()' type="submit">Войти</button>
+            <button class="btn btn-lg btn-success btn-block mt-1" @click='active_state = "register"'>Регистрация</button>
             
             </form>
       
-            <form v-else-if='active_state == "register"' id='reg_form' @submit='prevent($event)' class='border border-primary' style="background:white;border-radius:15px;width: 100%;max-width: 330px;padding: 15px;margin: auto;display:flex;align-items:center;flex-direction:column;justify-content:center;" method="POST" >
+            <form v-if='active_state == "register"' onsubmit='return false' id='reg_form' class='border border-primary' style="background:white;border-radius:15px;width: 100%;max-width: 330px;padding: 15px;margin: auto;display:flex;align-items:center;flex-direction:column;justify-content:center;" method="POST" >
             
           <h1 class="h3 mb-3 font-weight-normal">Зарегистрируйся,чтобы продолжить!</h1>
-            <input type="text" name="login"  class="form-control" placeholder="Логин" required="" autofocus="">   
-            <input type="e-mail" name="email" class="form-control mt-2" placeholder="E-mail" required="">      
-            <input type="password" name="password" id="inputPassword" class="form-control mt-2" placeholder="Пароль" required="">
-            <input type="password" id="inputPassword_rep" class="form-control mt-2" @input='check($event.target.value)' placeholder="Повторите пароль" required="">
-            <small class="text-danger d-none mt-2">Пароли не совпадают</small>
+            <input type="text" name="login" v-model='register_form.login' class="form-control" placeholder="Логин" required="" autofocus="">   
+            <input type="password" name="password" v-model='register_form.password' id="inputPassword" class="form-control mt-2" placeholder="Пароль" required="">
+            
       
-      
-            <button class="btn btn-lg btn-primary btn-block mt-2" id="reg_btn" disabled type="submit">Зарегистрироваться</button>
-            <button class="btn btn-lg btn-success btn-block mt-1" @click='active_state = states[0]'>Форма входа</button>
+            <button class="btn btn-lg btn-primary btn-block mt-2" id="reg_btn" type="submit">Зарегистрироваться</button>
+            <button class="btn btn-lg btn-success btn-block mt-1" @click='active_state = "login"'>Форма входа</button>
           
             </form>
       
+            
+
           </div>
 
 
+          
+
     {% include "vue-connection.html" %}
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     <script src="../static/main.js"></script>
 
 

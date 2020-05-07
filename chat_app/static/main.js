@@ -1,51 +1,45 @@
 Vue.options.delimiters = ['<%', '%>'];
 
-const states = ['login','register','main','messaging'];
+
 
 let main_app = new Vue({
     el:'#root',
     data:{
-        active_state:states[0] 
+        active_state:'login',
+        register_form:{
+            login:'',
+            password:''
+        },
+        login_form:{
+            login:"",
+            password:''
+        },
     },
     methods:{
-        change_state_to_reg(){
-            this.active_state = states[1]
-            let password_validation = new Vue({
-                el:'#reg_form',
-                data:{
-                    pass_rep:document.querySelector('#inputPassword_rep'),
-                    pass:document.querySelector('#inputPassword'),
-                    small:document.querySelector('small'),
-                    form:document.getElementById('reg_form'),
-                },
-                methods:{
-                    check(val){
-                        if (val === '' || this.pass.value === ''){
-                            if(!this.small.classList.contains('d-none')){
-                                this.small.classList.add('d-none')
-                            }
-                        }else if(this.pass_rep.value != this.pass.value){
-                            this.small.classList.remove('d-none','text-success')
-                            this.small.classList.add('text-danger')
-                            this.small.textContent = 'Пароли не совпадают'
-                        }else{
-                            this.small.classList.remove('d-none','text-danger')
-                            this.small.classList.add('text-success')
-                            this.small.textContent = 'Отлично'
-                        }
-            
-                    },
-                    prevent(e){
-                        e.preventDefault();
-                        if(this.pass.value == this.pass_rep.value){
-                            this.form.submit()
-                        }
-                    }
-            
+        login:function(){
+            const params = new URLSearchParams();
+            params.append('username', this.login_form.login);
+            params.append('password', this.login_form.password);
+            axios.post('/api/login', params)
+              .then(function(response){
+                if (response.status !== 200){
+                  throw new Error('Статус не 200')
                 }
-            
-            })
-            
+                let token = response.data.token;
+                localStorage.setItem('token',token)
+                this.login_form.login = '';
+                this.login_form.password = '';
+                alert(`Уважаемый,${response.data.username},вы успешно вошли в систему!`)
+                // this.active_state = 'main'
+                
+              })
+              .catch(function(error) {
+                alert(`Вы не вошли в систему,потому что ${error}`)
+                console.log(error);
+              });
+        },
+        register:() => {
+
         }
     }
 
