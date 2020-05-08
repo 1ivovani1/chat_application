@@ -7,7 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/login',login_page),
     path('api/register',register_page),
-    path('api/main',sample_api),
+    path('api/load_users',load_users),
     path('',show_page)
 
 ]

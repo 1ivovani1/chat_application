@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Выбери комнату</title>
+    <title>Chat Application</title>
+    <link rel="stylesheet" href="../static/main.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 </head>
 <body class="text-center" style="height:100vh;position: relative;display:flex;align-items:center;justify-content:center;flex-direction:column;">
@@ -28,16 +29,35 @@
             <form v-if='active_state == "register"' onsubmit='return false' id='reg_form' class='border border-primary' style="background:white;border-radius:15px;width: 100%;max-width: 330px;padding: 15px;margin: auto;display:flex;align-items:center;flex-direction:column;justify-content:center;" method="POST" >
             
           <h1 class="h3 mb-3 font-weight-normal">Зарегистрируйся,чтобы продолжить!</h1>
-            <input type="text" name="login" v-model='register_form.login' class="form-control" placeholder="Логин" required="" autofocus="">   
+            <input type="text" name="username" v-model='register_form.login' class="form-control" placeholder="Логин" required="" autofocus="">   
             <input type="password" name="password" v-model='register_form.password' id="inputPassword" class="form-control mt-2" placeholder="Пароль" required="">
             
       
-            <button class="btn btn-lg btn-primary btn-block mt-2" id="reg_btn" type="submit">Зарегистрироваться</button>
+            <button class="btn btn-lg btn-primary btn-block mt-2" id="reg_btn" @click='register()' type="submit">Зарегистрироваться</button>
             <button class="btn btn-lg btn-success btn-block mt-1" @click='active_state = "login"'>Форма входа</button>
           
             </form>
       
             
+            <div id="full_screen" v-if='active_state == "main" || active_state=="messaging"'>
+              <div class="row">
+                <div class="col-3 person-list">
+
+                  <div class="person bg-light">
+                    <h3><b>Alexander</b></h3>
+                    <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Numquam quaerat doloremque qui asperiores culpa neque quas voluptates facere, eveniet ducimus perferendis ea sit, aliquid voluptatum quasi esse nihil repudiandae deleniti.</p>
+                  </div>
+                  
+
+                </div>
+                <div class="col-9">
+
+                    <h1 class="bg-light">Вы пока что не начали диалог ни с кем 🤪</h1>
+
+                </div>
+              </div>
+            </div>
+
 
           </div>
 

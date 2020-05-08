@@ -16,25 +16,15 @@ from rest_framework.status import (
 )
 from rest_framework.response import Response
 
-class LoginValidation(forms.Form):
-    login = forms.CharField(max_length = 50)
-    password = forms.CharField(min_length = 2)
-
-class RegisterValidation(forms.Form):
-    login = forms.CharField(max_length=30)
-    email = forms.EmailField()
-    password = forms.CharField(min_length=6)
-
 
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes((AllowAny,))
-def register_page(requets):
-    username = request.POST.get('login')
-    email = request.POST.get('email')
-    password = request.POST.get('password')
+def register_page(request):
+    username = request.POST.get('username','')
+    password = request.POST.get('password','')
 
-    if username is '' or password is '' or email is '':
+    if username is '' or password is '' :
         return Response({'error': 'Please provide both username and password'},
                         status=HTTP_400_BAD_REQUEST)
 
@@ -42,20 +32,14 @@ def register_page(requets):
             return Response({'error': 'Such user is already exists'},
                         status=HTTP_400_BAD_REQUEST)       
     else:
-        form = RegisterValidation(request.POST)
-        if not form.is_valid():
-            return Response({'error': 'Form is invalid'},
-                        status=HTTP_400_BAD_REQUEST)       
-            
+               
         user = User()
         user.username = username
-        user.email = email
         user.set_password(password)
         user.save()
 
         token, _ = Token.objects.get_or_create(user=user)
-        redirect('/api/main')
-        return Response({'token': token.key},
+        return Response({'token': token.key,'username':username},
                         status=HTTP_200_OK)
 
 
@@ -85,8 +69,11 @@ def show_page(request):
        
 
 @csrf_exempt
-@api_view(["GET"])
-def sample_api(request):
-    data = {'sample_data': 123}
+@api_view(["POST"])
+def load_users(request):
+    all_users = User.objects.all()
+    data = {
+        'users':all_users
+    }
     return Response(data, status=HTTP_200_OK)
 
