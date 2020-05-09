@@ -38,13 +38,66 @@
           
             </form>
       
-            
-            <div id="full_screen" v-if='active_state == "main" || active_state=="messaging"'>
+            <div class="full_screen" v-if='active_state == "user-list"'>
               <div class="row">
-                <div class="col-3 person-list">
+                <div class="col-4 p-4">
+                    <center><h4>Найди своих друзей</h4></center>
+                  <input type="text" id="search-users" class="form-control" @input='search_users()' v-model='working_with_users.search_req' placeholder="Username или id">
+                
+                  <div  id="searching_container">  
+                    <div v-for='user in working_with_users.users_to_show' class="person bg-light mt-2">
+                      <h3><b><% user.username %></b></h3>
+                      <button type="button" v-if='user.status == "ready_to_send"' class="btn btn-success" @click='send_friend_request(user.id)'>Добавить в друзья</button>      
+                      <p v-if='user.status == "request"'>Запрос дружбы отправлен</p>
+                      <p v-if='user.status == "friends"'>У вас в друзьях</p>
+                    </div>
 
-                  <div class="person bg-light">
-                    <h3><b>Alexander</b></h3>
+                    <button type="button" v-if='working_with_users.load_more' @click='load_users()' class="btn btn-primary btn-block mt-4">Загрузить еще</button>
+
+                  </div>
+                </div>
+
+                <div class="col-4 p-4" id="requests_container">
+                    <div v-if='current_user.is_any_requests'>
+                    <center><h4>Запросы в друзья <span class="badge badge-light"><% current_user.requests.length %></span></h4></center>
+                    <div v-for='user in current_user.requests' class="person bg-light mt-2">
+                        <h3><b><% user.username %></b></h3>
+                        <button type="button" class="btn btn-success" @click='accept_friend_request(user.id)'>Добавить</button>      
+                        <button type="button" class="btn btn-success" @click='deny_friend_request(user.id)'>Отклонить</button>      
+                      </div>
+                    </div>
+
+                    <div v-if='!current_user.is_any_requests' style="height:100%;width:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <h4>У вас пока что нет заявок 🤷🏼‍♀️</h4>
+                    </div>
+
+                </div>
+
+                <div class="col-4 p-4" id="friends_container">
+                    <div v-if='current_user.is_any_friends'>
+                    <center><h4>Друзья <span class="badge badge-light"><% current_user.friends.length %></span></h4></center>
+                    <div v-for='user in current_user.friends' class="person bg-light mt-2">
+                        <h3><b><% user.username %></b></h3>
+                        <button type="button" class="btn btn-success" @click='active_state = "messaging-list"'>Написать</button>      
+                    </div>
+                    </div>
+
+                    <div v-if='!current_user.is_any_friends' style="height:100%;width:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <h4>У вас пока что нет друзей 🙊</h4>
+                    </div>
+
+                </div>
+
+              </div>
+            </div>
+            
+
+            <div class="full_screen" v-if='active_state == "messaging-list" || active_state=="writting-message"'>
+              <div class="row">
+                <div class="col-3 person-list" style="margin-top:12px;">
+
+                  <div v-for='user in current_user.friends' @click='change_state_to_messaging(user.id)' class="person bg-light">
+                    <h3><b><% user.username %></b></h3>
                     <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Numquam quaerat doloremque qui asperiores culpa neque quas voluptates facere, eveniet ducimus perferendis ea sit, aliquid voluptatum quasi esse nihil repudiandae deleniti.</p>
                   </div>
                   
@@ -52,7 +105,18 @@
                 </div>
                 <div class="col-9">
 
-                    <h1 class="bg-light">Вы пока что не начали диалог ни с кем 🤪</h1>
+                    <h1 class="bg-light" v-if='active_state=="messaging-list"' >Вы пока что не начали диалог ни с кем 🤪</h1>
+                    <div id="messages-block" v-if='active_state=="writting-message"' class="bg-light">
+                      <center><h2 class="mt-4"><%current_user.whom_messaging.username%></h2></center>
+
+                      <ul id="messages">
+                          <li v-for='message in current_user.history' v-bind:class="{him:(message.from_id != current_user.id),me:(message.from_id == current_user.id)}"><% message.msg %></li>
+                         
+                      </ul>
+
+                      <input type="text" placeholder="Введите сообщение..." id="message-input" v-model='current_user.active_message'>
+                      <button type="button" class="btn btn-primary" id='send-mess-btn' @click='send_message(current_user.whom_messaging.id)'>⌲</button>
+                    </div>
 
                 </div>
               </div>
