@@ -33,29 +33,36 @@ let main_app = new Vue({
     },
     methods:{
         login:function(){
-            
-            const params = new URLSearchParams(),
-                  self = this;
-            params.append('username', self.login_form.login);
-            params.append('password', self.login_form.password);
-            axios.post('/api/login', params)
-              .then(function(response){
+            let socket = io.connect('http://localhost');
+            socket.emit('login_server', { data: {'username':this.login_form.login,'password':this.login_form.password} });
+
+            socket.on('get_login_response',function(data){
+                console.log(data)
+            })
+
+
+            // const params = new URLSearchParams(),
+            //       self = this;
+            // params.append('username', self.login_form.login);
+            // params.append('password', self.login_form.password);
+            // axios.post('/api/login', params)
+            //   .then(function(response){
                 
-                let token = response.data.token;
-                localStorage.setItem('token',token)
-                self.login_form.login = '';
-                self.login_form.password = '';
-                alert(`Уважаемый,${response.data.username},вы успешно вошли в систему!`)
-                self.active_state = 'user-list'
-                self.load_users()
+            //     let token = response.data.token;
+            //     localStorage.setItem('token',token)
+            //     self.login_form.login = '';
+            //     self.login_form.password = '';
+            //     alert(`Уважаемый,${response.data.username},вы успешно вошли в систему!`)
+            //     self.active_state = 'user-list'
+            //     self.load_users()
                 
-              })
-              .catch(function(error) {
-                self.login_form.login = '';
-                self.login_form.password = '';
-                alert(`Вы не вошли в систему,потому что \n ${error}`)
-                console.log(error);
-              });
+            //   })
+            //   .catch(function(error) {
+            //     self.login_form.login = '';
+            //     self.login_form.password = '';
+            //     alert(`Вы не вошли в систему,потому что \n ${error}`)
+            //     console.log(error);
+            //   });
         },
         register:function() {
           const params = new URLSearchParams(),
