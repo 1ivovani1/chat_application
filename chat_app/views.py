@@ -60,7 +60,6 @@ def register_page(request):
                         status=HTTP_200_OK)
 
 
-
 @csrf_exempt
 @api_view(["POST"])
 @permission_classes((AllowAny,))
@@ -78,7 +77,24 @@ def login_page(request):
     return Response({'token': token.key,'username':user.username},
                     status=HTTP_200_OK)
 
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def check(request):
+    token = request.POST.get('token','')
+    if token is '':
+        return Response(status=HTTP_400_BAD_REQUEST)
 
+    if Token.objects.filter(key=token).exists():
+        user = Token.objects.filter(key=token).first().user
+
+        data = {
+            'user_id':user.id
+        }
+
+        return Response(data,status=HTTP_200_OK)
+    else:
+        return Response(status=HTTP_404_NOT_FOUND)
 
 @csrf_exempt
 @api_view(["GET"])
@@ -134,7 +150,14 @@ def send_message(request):
         mess = Message(msg=msg,from_who=request.user,to_who=whom_send)
         mess.save()
         
-        return Response(status=HTTP_200_OK)
+        data = {
+            'id':mess.id,
+            'msg':mess.msg,
+            'from_id':mess.from_who.id,
+            'to_id':mess.to_who.id
+        }
+
+        return Response(data,status=HTTP_200_OK)
 
     else:
         return Response({'error': 'This user is not your friend'},

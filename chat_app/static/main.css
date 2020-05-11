@@ -58,6 +58,11 @@ body{
     padding: 20px;
 }
 
+#messages::-webkit-scrollbar { 
+    /* This is the magic bit for WebKit */
+    display: none;
+  }
+
 #messages li{
     display:inline-block;
     clear: both;

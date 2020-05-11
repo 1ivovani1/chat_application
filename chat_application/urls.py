@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/deny_friend_request',deny_friend_request),
     path('api/get_user_messages',get_user_messages),
     path('api/send_message',send_message),
+    path('api/check_user',check),
     path('',show_page)
 
 ]

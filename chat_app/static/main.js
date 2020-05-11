@@ -3,6 +3,7 @@ Vue.options.delimiters = ['<%', '%>'];
 let main_app = new Vue({
     el:'#root',
     data:{
+        user_id:'',
         active_state:'login',
         register_form:{
             login:'',
@@ -27,44 +28,19 @@ let main_app = new Vue({
           whom_messaging:{},
           active_message:'',
           history:[]
-        }
+        },
+        connection:''
 
 
     },
     methods:{
         login:function(){
-            let socket = io.connect('http://localhost');
-            socket.emit('login_server', { data: {'username':this.login_form.login,'password':this.login_form.password} });
-
-            socket.on('get_login_response',function(data){
-                console.log(data)
-            })
-
-
-            // const params = new URLSearchParams(),
-            //       self = this;
-            // params.append('username', self.login_form.login);
-            // params.append('password', self.login_form.password);
-            // axios.post('/api/login', params)
-            //   .then(function(response){
-                
-            //     let token = response.data.token;
-            //     localStorage.setItem('token',token)
-            //     self.login_form.login = '';
-            //     self.login_form.password = '';
-            //     alert(`Уважаемый,${response.data.username},вы успешно вошли в систему!`)
-            //     self.active_state = 'user-list'
-            //     self.load_users()
-                
-            //   })
-            //   .catch(function(error) {
-            //     self.login_form.login = '';
-            //     self.login_form.password = '';
-            //     alert(`Вы не вошли в систему,потому что \n ${error}`)
-            //     console.log(error);
-            //   });
+          let self = this;    
+          self.connection.send(JSON.stringify({logging:'',login:self.login_form.login,password:self.login_form.password}))
         },
         register:function() {
+          self.connection.send(JSON.stringify({register:'',login:self.register_form.login,password:self.register_form.password}))
+        
           const params = new URLSearchParams(),
           self = this;
           params.append('username', self.register_form.login);
@@ -74,17 +50,13 @@ let main_app = new Vue({
              
               let token = response.data.token;
               localStorage.setItem('token',token)
-              self.register_form.login = '';
-              self.register_form.password = '';
+             
               alert(`Уважаемый,${response.data.username},вы успешно зарегистрировались в системе!`)
               self.active_state = 'user-list'
               self.load_users()
             })
             .catch(function(error) {
-              self.register_form.login = '';
-              self.register_form.password = '';
-              alert(`Вы не вошли в систему,потому что \n ${error}`)
-              console.log(error);
+              alert(`Вы не зарегистрировались,потому что \n ${error}`)
             });
         },
         load_users:function(){
@@ -126,6 +98,7 @@ let main_app = new Vue({
               .catch(function(error) {
                 console.error(error);
                 self.active_state = 'login'
+                localStorage.clear()
                 alert(error)
               });
 
@@ -228,27 +201,16 @@ let main_app = new Vue({
           })
         },
         send_message:function(id){
-          let self = this;
-          params = new URLSearchParams();
-          params.append('user_id',id)
-          params.append('msg',self.current_user.active_message)
-          self.current_user.active_message = ''
-          axios.post('/api/send_message',params,
-          {
-            headers:{
-              'Authorization':'Token ' + localStorage.getItem('token')
-            }
-          })
-          .then(function(response){
-            if(response.status === 200){
-              alert('Сообщение отправлено!')
-            }
+          let data = {
+            'token':localStorage.getItem('token'),
+            'user_id':id,
+            'msg':this.current_user.active_message,
+            'sending_message':''
+          }
 
-          })
-          .catch(function(error){
-            console.error(error)
-            alert(error)
-          })
+          this.connection.send(JSON.stringify(data))
+          this.current_user.active_message = '';
+          
 
 
         },
@@ -267,7 +229,10 @@ let main_app = new Vue({
               self.current_user.whom_messaging = response.data
               self.current_user.id = response.data.request_user_id
               self.current_user.history = response.data.history
-
+              
+              setTimeout(()=> {
+                location.href = '#bottom'
+              },0)
           })
           .catch(function(error){
             console.error(error)
@@ -278,13 +243,86 @@ let main_app = new Vue({
 
     },
     mounted(){
-      if(localStorage.getItem('token') !== null){
-        this.active_state = 'user-list'
-        this.load_users()
-      }else{
-        this.active_state = 'login'
+      let self = this
+      
+      self.connection = new WebSocket('ws://127.0.0.1:1337');
+  
+      self.connection.onopen = function(){
+        console.log('success connection')
+        if(localStorage.getItem('token') !== null){
+          self.active_state = 'user-list'
+          self.load_users()
+          self.connection.send(JSON.stringify({check:'',token:localStorage.getItem('token')}))
+        }
       }
+      
+      self.connection.onerror = function (error) {
+        console.error(error)
+      };
+      
+      self.connection.onmessage = function(message){
+          
+        let data = JSON.parse(message.data)
+        
+        if(data.hasOwnProperty("success_send")){
+          if (data.success_send == true){
+            self.current_user.history.push(data.message)
+            location.href = '#bottom';
+          }else{
+            alert('Cообщение не отправлено')
+          }
+        }
+        if(data.hasOwnProperty("check")){
+          if(data.status === 200){
+            self.user_id = data.user_id
+            alert('Добро пожаловать!')
+          }else{
+            localStorage.clear()
+            self.connection.close()
+            alert('Вас нет в системе,поэтому вам придется зайти по-новой!')
+          }
+        }
+        if(data.hasOwnProperty("logging")){
+          
+          if(data.status === 200){
+            alert(`Уважаемый,${data.username},вы успешно вошли в систему!`)
+            self.login_form.login = '';
+            self.login_form.password = '';
 
+            let token = data.token;
+            localStorage.setItem('token',token)
+
+            self.active_state = 'user-list'
+            self.load_users()
+        }else{
+          localStorage.clear()
+          alert('Вас нет в системе,поэтому лучше зарегистрируйтесь!')
+          self.login_form.login = '';
+          self.login_form.password = '';
+            
+        }
+        }
+        if(data.hasOwnProperty("register")){
+          if(data.status === 200){
+            alert(`Уважаемый,${data.username},вы успешно зарегистрировались в системе!`)
+            self.register_form.login = '';
+            self.register_form.password = '';
+        
+            self.active_state = 'user-list'
+            self.load_users()
+         
+
+            let token = data.token;
+            localStorage.setItem('token',token)
+
+           }else{
+            alert(`Вы не зарегистрировались!`)
+          }
+        }
+
+    }
+
+      
     },
 
 

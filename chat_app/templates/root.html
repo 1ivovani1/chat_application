@@ -109,9 +109,9 @@
                     <div id="messages-block" v-if='active_state=="writting-message"' class="bg-light">
                       <center><h2 class="mt-4"><%current_user.whom_messaging.username%></h2></center>
 
-                      <ul id="messages">
+                      <ul id="messages" style="position:relative;">
                           <li v-for='message in current_user.history' v-bind:class="{him:(message.from_id != current_user.id),me:(message.from_id == current_user.id)}"><% message.msg %></li>
-                         
+                          <div id="bottom" style="position:absolute;bottom:0;"></div>
                       </ul>
 
                       <input type="text" placeholder="Введите сообщение..." id="message-input" v-model='current_user.active_message'>
