@@ -13,7 +13,9 @@ const wsServer = new WebSocketServer({
   httpServer: server
 });
 
-let connections = []
+let connections = [],
+    calls = []
+
 
 // WebSocket server
 wsServer.on('request', function(request) {
@@ -35,7 +37,8 @@ wsServer.on('request', function(request) {
             connection.send(JSON.stringify({
               'status':200,
               'user_id':response.data.user_id,
-              'check':''
+              'check':'',
+              'username':response.data.username
             }))
           }
       })
@@ -95,7 +98,8 @@ wsServer.on('request', function(request) {
             'status':200,
             'token':response.data.token,
             'username':response.data.username,
-            'register':''
+            'register':'',
+            'user_id':response.data.user_id
           }))
         }else{
           connection.send(JSON.stringify({
@@ -126,6 +130,7 @@ wsServer.on('request', function(request) {
               'status':200,
               'token':response.data.token,
               'username':response.data.username,
+              'user_id':response.data.user_id,
               'logging':''
             }))
           }else{
@@ -141,6 +146,72 @@ wsServer.on('request', function(request) {
           'logging':''
         }))
       })
+    }
+    if ('deny_call' in self){
+      let is_online = false
+        
+      connections.forEach(conn => {
+        if(self.user_id == conn.user_id){
+          is_online = true
+          conn.connection.send(JSON.stringify({
+            denying:'',
+            user_id:self.user_id,
+            username:self.username,
+            status:200
+          }))
+        }
+      })
+
+      if(!is_online)
+        connection.send(JSON.stringify({
+          denying:'',
+          status:400
+        }))
+    }
+    if ('accept_call' in self){
+      let is_online = false
+        
+      connections.forEach(conn => {
+        if(self.user_id == conn.user_id){
+          is_online = true
+          conn.connection.send(JSON.stringify({
+            accepting:'',
+            user_id:self.user_id,
+            username:self.username,
+            status:200
+          }))
+        }
+      })
+
+      if(!is_online)
+        connection.send(JSON.stringify({
+          accepting:'',
+          status:400
+        }))
+    }
+    
+
+    if('start_call' in self){
+        let is_online = false
+        
+        connections.forEach(conn => {
+          if(self.user_id == conn.user_id){
+            is_online = true
+            conn.connection.send(JSON.stringify({
+              calling:'',
+              user_id:self.user_id,
+              username:self.username,
+              status:200,
+              my_id:self.my_id
+            }))
+          }
+        })
+
+        if(!is_online)
+          connection.send(JSON.stringify({
+            calling:'',
+            status:400
+          }))
     }
 
     

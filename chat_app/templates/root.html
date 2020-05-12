@@ -47,9 +47,10 @@
                   <div  id="searching_container">  
                     <div v-for='user in working_with_users.users_to_show' class="person bg-light mt-2">
                       <h3><b><% user.username %></b></h3>
-                      <button type="button" v-if='user.status == "ready_to_send"' class="btn btn-success" @click='send_friend_request(user.id)'>Добавить в друзья</button>      
-                      <p v-if='user.status == "request"'>Запрос дружбы отправлен</p>
-                      <p v-if='user.status == "friends"'>У вас в друзьях</p>
+                      <button type="button" v-if='user.status == "ready_to_send" && user.id != user_id' class="btn btn-success" @click='send_friend_request(user.id)'>Добавить в друзья</button>      
+                      <p v-if='user.status == "request" && user.id != user_id'>Запрос дружбы отправлен</p>
+                      <p v-if='user.status == "friends" && user.id != user_id'>У вас в друзьях</p>
+                      <p v-if='user.id == user_id' class="text-success">Это вы!</p>
                     </div>
 
                     <button type="button" v-if='working_with_users.load_more' @click='load_users()' class="btn btn-primary btn-block mt-4">Загрузить еще</button>
@@ -107,7 +108,7 @@
 
                     <h1 class="bg-light" v-if='active_state=="messaging-list"' >Вы пока что не начали диалог ни с кем 🤪</h1>
                     <div id="messages-block" v-if='active_state=="writting-message"' class="bg-light">
-                      <center><h2 class="mt-4"><%current_user.whom_messaging.username%></h2></center>
+                      <center><h2 class="mt-4"><%current_user.whom_messaging.username%> <img @click='start_call(current_user.whom_messaging.id)' src="https://image.flaticon.com/icons/png/512/523/523081.png" style="height:30px;width:30px; cursor:pointer;" alt=""></h2>  </center>
 
                       <ul id="messages" style="position:relative;">
                           <li v-for='message in current_user.history' v-bind:class="{him:(message.from_id != current_user.id),me:(message.from_id == current_user.id)}"><% message.msg %></li>
@@ -123,9 +124,34 @@
             </div>
 
 
+            <div id="modal-bg" v-if='video_calls.is_calling' style="position: fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+              <div id="modal" style="height:200px;min-width:200px;padding:0 20px;background:white;border-radius:15px;display:flex;align-items:center;justify-content:space-around;flex-direction:column;opacity:1;">
+                
+                  <div v-if='!video_calls.i_calls'>
+                  <h1><% video_calls.username %></h1>
+
+                  <div class="row">
+                    <div class="col-6">
+                      <img src="../static/accept.svg" style="height:50px;width:50px;" @click='accept_call(video_calls.user_id)' alt="">
+                    </div>
+                    <div class="col-6">
+                      <img src="../static/deny.svg" style="height:50px;width:50px;" @click='deny_call(video_calls.user_id)' alt="">
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if='video_calls.i_calls'>
+                    <h1><% current_user.whom_messaging.username %></h1>
+                    <p>Звонок...</p>
+                  </div> 
+
+              
+              </div>
+            </div>
+
           </div>
 
-
+          
           
 
     {% include "vue-connection.html" %}

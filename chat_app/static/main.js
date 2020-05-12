@@ -4,6 +4,10 @@ let main_app = new Vue({
     el:'#root',
     data:{
         user_id:'',
+        username:'',
+        audio:'',
+        interval:'',
+        // pc:'',
         active_state:'login',
         register_form:{
             login:'',
@@ -29,35 +33,22 @@ let main_app = new Vue({
           active_message:'',
           history:[]
         },
-        connection:''
-
+        connection:'',
+        video_calls:{
+          i_call:false,
+          is_calling:false,
+          username:null,
+          user_id:null,
+        }
+        
 
     },
     methods:{
-        login:function(){
-          let self = this;    
-          self.connection.send(JSON.stringify({logging:'',login:self.login_form.login,password:self.login_form.password}))
+        login:function(){   
+          this.connection.send(JSON.stringify({logging:'',login:this.login_form.login,password:this.login_form.password}))
         },
         register:function() {
-          self.connection.send(JSON.stringify({register:'',login:self.register_form.login,password:self.register_form.password}))
-        
-          const params = new URLSearchParams(),
-          self = this;
-          params.append('username', self.register_form.login);
-          params.append('password', self.register_form.password);
-          axios.post('/api/register', params)
-            .then(function(response){
-             
-              let token = response.data.token;
-              localStorage.setItem('token',token)
-             
-              alert(`Уважаемый,${response.data.username},вы успешно зарегистрировались в системе!`)
-              self.active_state = 'user-list'
-              self.load_users()
-            })
-            .catch(function(error) {
-              alert(`Вы не зарегистрировались,потому что \n ${error}`)
-            });
+          this.connection.send(JSON.stringify({register:'',login:this.register_form.login,password:this.register_form.password}))
         },
         load_users:function(){
               const self = this,
@@ -239,6 +230,43 @@ let main_app = new Vue({
             alert(error)
           })
 
+        },
+        start_call:function(id){
+          const self = this;
+          self.video_calls.i_call = true
+          self.connection.send(JSON.stringify({
+            my_id:self.user_id,
+            user_id:id,
+            username:self.username,
+            start_call:null
+          }))
+
+        },
+        deny_call:function(id){
+          const self = this;
+          self.video_calls.is_calling = false
+          self.audio.pause()
+          clearInterval(self.interval)
+        
+          self.connection.send(JSON.stringify({
+            user_id:id,
+            username:self.username,
+            deny_call:null
+          }))
+
+        },
+        accept_call:function(id){
+          const self = this;
+          self.video_calls.is_calling = false
+          self.audio.pause()
+          clearInterval(self.interval)
+        
+          self.connection.send(JSON.stringify({
+            user_id:id,
+            username:self.username,
+            accept_call:null
+          }))
+
         }
 
     },
@@ -264,6 +292,7 @@ let main_app = new Vue({
           
         let data = JSON.parse(message.data)
         
+        
         if(data.hasOwnProperty("success_send")){
           if (data.success_send == true){
             self.current_user.history.push(data.message)
@@ -275,7 +304,9 @@ let main_app = new Vue({
         if(data.hasOwnProperty("check")){
           if(data.status === 200){
             self.user_id = data.user_id
-            alert('Добро пожаловать!')
+            self.username = data.username
+            
+            alert('С возращением!')
           }else{
             localStorage.clear()
             self.connection.close()
@@ -288,9 +319,11 @@ let main_app = new Vue({
             alert(`Уважаемый,${data.username},вы успешно вошли в систему!`)
             self.login_form.login = '';
             self.login_form.password = '';
-
+  
             let token = data.token;
             localStorage.setItem('token',token)
+            self.user_id = data.user_id
+            self.my_username = data.username
 
             self.active_state = 'user-list'
             self.load_users()
@@ -304,22 +337,61 @@ let main_app = new Vue({
         }
         if(data.hasOwnProperty("register")){
           if(data.status === 200){
+
             alert(`Уважаемый,${data.username},вы успешно зарегистрировались в системе!`)
             self.register_form.login = '';
             self.register_form.password = '';
         
-            self.active_state = 'user-list'
-            self.load_users()
-         
-
             let token = data.token;
             localStorage.setItem('token',token)
+            self.user_id = data.user_id
 
+            self.username = data.username
+            self.active_state = 'user-list'
+            self.load_users()
+        
            }else{
             alert(`Вы не зарегистрировались!`)
           }
         }
-
+        if(data.hasOwnProperty('calling')){
+          if(data.status === 200){
+              let audio = new Audio();
+              self.audio = audio
+              audio.src = '../static/zvonok.mp3'
+              audio.play()
+              let repeat = setInterval(()=>{
+                audio.play()
+              },9000)
+              self.interval = repeat
+              let id = data.my_id,
+                  username = data.username;
+              self.video_calls.is_calling = true;
+              self.video_calls.username = username;
+              self.video_calls.user_id = id
+            
+          }else{
+            alert('Не удалось дозвониться!')
+          }
+        }
+        if(data.hasOwnProperty('accepting')){
+          if(data.status === 200){
+            self.video_calls.is_calling = false
+            alert('Звонок приянт')
+          }else{
+            self.video_calls.is_calling = false
+            alert('Не удалось дозвониться')
+          }
+        }
+        if(data.hasOwnProperty('denying')){
+          if(data.status === 200){
+            self.video_calls.is_calling = false
+            alert('Занято')
+          }else{
+            self.video_calls.is_calling = false
+            alert('Не удалось дозвониться')
+          }
+        }
     }
 
       

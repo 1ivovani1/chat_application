@@ -56,7 +56,7 @@ def register_page(request):
         user.save()
 
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key,'username':username},
+        return Response({'token': token.key,'username':username,'user_id':user.id},
                         status=HTTP_200_OK)
 
 
@@ -74,7 +74,7 @@ def login_page(request):
         return Response({'error': 'Invalid Credentials'},
                         status=HTTP_404_NOT_FOUND)
     token, _ = Token.objects.get_or_create(user=user)
-    return Response({'token': token.key,'username':user.username},
+    return Response({'token': token.key,'username':user.username,'user_id':user.id},
                     status=HTTP_200_OK)
 
 @csrf_exempt
@@ -89,7 +89,8 @@ def check(request):
         user = Token.objects.filter(key=token).first().user
 
         data = {
-            'user_id':user.id
+            'user_id':user.id,
+            'username':user.username
         }
 
         return Response(data,status=HTTP_200_OK)
@@ -280,7 +281,7 @@ def load_users(request):
     data['real_length'] = real_length
 
     for i in range(last_loaded_index,last_loaded_index + length):
-        if request.user.username != all_users[i].username:
+        
             new_user = {
                 'username':all_users[i].username,
                 'id':all_users[i].id
@@ -292,9 +293,7 @@ def load_users(request):
             else:
                 new_user['status'] = 'ready_to_send'
             data['users'].append(new_user)
-        else:
-            continue
-
+        
 
     return Response(data, status=HTTP_200_OK)
 
