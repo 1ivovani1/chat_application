@@ -13,8 +13,7 @@ const wsServer = new WebSocketServer({
   httpServer: server
 });
 
-let connections = [],
-    calls = []
+let connections = []
 
 
 // WebSocket server
@@ -190,6 +189,47 @@ wsServer.on('request', function(request) {
         }))
     }
     
+    if('offer' in self){
+      console.log('offer is accepted')
+      let id = self.id;
+      let is_online = false
+      connections.forEach(conn => {
+        if(id == conn.user_id){
+          is_online = true
+          conn.connection.send(JSON.stringify({
+              offer:self.offer
+          }))
+          console.log('offer is sent');
+          
+        }
+        if(!is_online)
+        connection.send(JSON.stringify({
+          offer:null,
+          status:400
+        }))
+      })
+    }
+
+    if('answer' in self){
+      console.log('answer is accepted');
+      
+      let id = self.id;
+      let is_online = false
+      connections.forEach(conn => {
+        if(id == conn.user_id){
+          is_online = true
+          conn.connection.send(JSON.stringify({
+              answer:self.answer
+          }))
+          console.log('answer is sent')
+        }
+        if(!is_online)
+        connection.send(JSON.stringify({
+          answer:null,
+          status:400
+        }))
+      }) 
+    }
 
     if('start_call' in self){
         let is_online = false

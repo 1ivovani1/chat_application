@@ -7,7 +7,8 @@ let main_app = new Vue({
         username:'',
         audio:'',
         interval:'',
-        // pc:'',
+        pc:'',
+        video:'',
         active_state:'login',
         register_form:{
             login:'',
@@ -233,7 +234,9 @@ let main_app = new Vue({
         },
         start_call:function(id){
           const self = this;
+          self.video_calls.is_calling = true
           self.video_calls.i_call = true
+
           self.connection.send(JSON.stringify({
             my_id:self.user_id,
             user_id:id,
@@ -261,6 +264,7 @@ let main_app = new Vue({
           self.audio.pause()
           clearInterval(self.interval)
         
+
           self.connection.send(JSON.stringify({
             user_id:id,
             username:self.username,
@@ -273,7 +277,7 @@ let main_app = new Vue({
     mounted(){
       let self = this
       
-      self.connection = new WebSocket('ws://127.0.0.1:1337');
+      self.connection = new WebSocket('ws://192.168.0.105:1337');
   
       self.connection.onopen = function(){
         console.log('success connection')
@@ -371,13 +375,102 @@ let main_app = new Vue({
               self.video_calls.user_id = id
             
           }else{
+            self.video_calls.is_calling = false
             alert('Не удалось дозвониться!')
           }
         }
+        if(data.hasOwnProperty('offer')){
+          if(data.offer != null){
+            var pc = new RTCPeerConnection();
+            self.pc = pc
+
+            navigator.getUserMedia = navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia;
+
+            navigator.getUserMedia({video: true,audio:true}, function(stream) {
+              var my_video = document.getElementById('my')
+              my_video.srcObject = stream
+              console.log('stream is added while offering')
+
+              self.pc.onaddstream = e => {
+                console.log('not my stream is added while offering')
+                document.getElementById('not_my').srcObject = e.stream;
+                
+              }
+              self.pc.addStream(stream);
+            
+              self.pc.setRemoteDescription(new RTCSessionDescription(data.offer), function() {
+                self.pc.createAnswer(function(answer) {
+                  self.pc.setLocalDescription(answer, function() {
+                    self.connection.send(JSON.stringify({
+                      answer:answer,
+                      id:self.current_user.whom_messaging.id
+                    }))
+                  }, e => console.log(e));
+                }, e => console.log(e));
+              }, e => console.log(e));
+            },function (){console.warn("Error getting audio stream from getUserMedia")});
+          }
+        }
+
+        if(data.hasOwnProperty('answer')){
+          if(data.answer != null){
+            self.pc.setRemoteDescription(new RTCSessionDescription(data.answer), function() { }, error);
+            
+          }
+        }
+
         if(data.hasOwnProperty('accepting')){
           if(data.status === 200){
             self.video_calls.is_calling = false
-            alert('Звонок приянт')
+            var pc = new RTCPeerConnection();
+            self.pc = pc
+            
+            navigator.getUserMedia = navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia;
+                      
+
+            navigator.getUserMedia({video: true,audio:true}, function(stream) {
+              // Добавление локального потока не вызовет onaddstream обратного вызова,
+              // так называют его вручную.
+            var my_video = document.getElementById('my')
+            my_video.srcObject = stream
+
+              self.pc.onaddstream = e => {
+                document.getElementById('not_my').srcObject = e.stream;
+                console.log('not stream is added')
+              }
+              self.pc.addStream(stream);   
+            
+              self.pc.createOffer(function(offer) {
+                self.pc.setLocalDescription(offer, function() {
+                  // send the offer to a server to be forwarded to the friend you're calling.
+                  self.connection.send(JSON.stringify({
+                    offer:offer,
+                    id:self.current_user.whom_messaging.id
+               
+                  }))
+                  console.log('offer is sent',offer)
+                }, e=> console.log(e));
+              }, e=> console.log(e));
+            },function (){console.warn("Error getting audio stream from getUserMedia")});
+
+            // функция помощник
+            function endCall() {
+              var videos = document.getElementsByTagName("video");
+              for (var i = 0; i < videos.length; i++) {
+                videos[i].pause();
+              }
+            
+              self.pc.close();
+            }
+
+            function error(err) {
+              endCall();
+            }
+
           }else{
             self.video_calls.is_calling = false
             alert('Не удалось дозвониться')
@@ -386,6 +479,7 @@ let main_app = new Vue({
         if(data.hasOwnProperty('denying')){
           if(data.status === 200){
             self.video_calls.is_calling = false
+            self.video_calls.i_call = false
             alert('Занято')
           }else{
             self.video_calls.is_calling = false
@@ -396,7 +490,6 @@ let main_app = new Vue({
 
       
     },
-
-
+  
 })
 
