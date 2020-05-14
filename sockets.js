@@ -255,6 +255,25 @@ wsServer.on('request', function(request) {
           }))
     }
 
+    if('ice' in self){
+      let id = self.id,
+          ice = self.ice,
+          is_online = false
+      connections.forEach(conn => {
+        if(id == conn.user_id){
+          is_online = true
+          conn.connection.send(JSON.stringify({
+              ice:ice
+          }))
+          console.log('ice is sent')
+        }
+      }) 
+      if(!is_online)
+        connection.send(JSON.stringify({
+          answer:null,
+          status:400
+      }))
+    }
     
   });
 

@@ -382,7 +382,24 @@ let main_app = new Vue({
           if(data.offer != null){
             var pc = new RTCPeerConnection();
             self.pc = pc
-            
+            var peerConnectionConfig = {
+              iceServers: [
+                  {
+                      urls: 'stun:stun.l.google.com:19302'
+                  }
+                ]
+            }
+            self.pc.onicecandidate = function (event) {
+              console.log('new ice candidate', event.candidate);
+
+              if (event.candidate !== null) {
+                self.connection.send(JSON.stringify({
+                  ice: event.candidate,
+                  id:self.current_user.whom_messaging.id
+                }))
+              }
+          };
+
             self.current_user.whom_messaging.id = data.other_id
 
             navigator.getUserMedia = navigator.getUserMedia ||
@@ -417,7 +434,12 @@ let main_app = new Vue({
 
         if(data.hasOwnProperty('answer')){
             self.pc.setRemoteDescription(new RTCSessionDescription(data.answer), function() { }, error);
-            console.log('answer is connected')
+          
+        }
+
+        if(data.hasOwnProperty('ice')){
+          let ice = data.ice
+          self.pc.addIceCandidate(new RTCIceCandidate(ice))
           
         }
 
@@ -428,6 +450,24 @@ let main_app = new Vue({
             var pc = new RTCPeerConnection();
             self.pc = pc
             
+            var peerConnectionConfig = {
+              iceServers: [
+                  {
+                      urls: 'stun:stun.l.google.com:19302'
+                  }
+                ]
+            }
+            self.pc.onicecandidate = function (event) {
+              console.log('new ice candidate', event.candidate);
+
+              if (event.candidate !== null) {
+                self.connection.send(JSON.stringify({
+                  ice: event.candidate,
+                  id:self.current_user.whom_messaging.id
+                }))
+              }
+          };
+
             navigator.getUserMedia = navigator.getUserMedia ||
                          navigator.webkitGetUserMedia ||
                          navigator.mozGetUserMedia;
