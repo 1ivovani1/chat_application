@@ -8,7 +8,6 @@ let main_app = new Vue({
         audio:'',
         interval:'',
         pc:'',
-        video:'',
         active_state:'login',
         register_form:{
             login:'',
@@ -383,6 +382,8 @@ let main_app = new Vue({
           if(data.offer != null){
             var pc = new RTCPeerConnection();
             self.pc = pc
+            
+            self.current_user.whom_messaging.id = data.other_id
 
             navigator.getUserMedia = navigator.getUserMedia ||
                          navigator.webkitGetUserMedia ||
@@ -415,14 +416,14 @@ let main_app = new Vue({
         }
 
         if(data.hasOwnProperty('answer')){
-          if(data.answer != null){
             self.pc.setRemoteDescription(new RTCSessionDescription(data.answer), function() { }, error);
-            
-          }
+            console.log('answer is connected')
+          
         }
 
         if(data.hasOwnProperty('accepting')){
           if(data.status === 200){
+            console.log(self.current_user.whom_messaging);
             self.video_calls.is_calling = false
             var pc = new RTCPeerConnection();
             self.pc = pc
@@ -449,10 +450,9 @@ let main_app = new Vue({
                   // send the offer to a server to be forwarded to the friend you're calling.
                   self.connection.send(JSON.stringify({
                     offer:offer,
-                    id:self.current_user.whom_messaging.id
-               
+                    id:self.current_user.whom_messaging.id,
+                    my_id:self.user_id
                   }))
-                  console.log('offer is sent',offer)
                 }, e=> console.log(e));
               }, e=> console.log(e));
             },function (){console.warn("Error getting audio stream from getUserMedia")});

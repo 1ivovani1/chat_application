@@ -190,14 +190,15 @@ wsServer.on('request', function(request) {
     }
     
     if('offer' in self){
-      console.log('offer is accepted')
-      let id = self.id;
+      let id = self.id  
+        
       let is_online = false
       connections.forEach(conn => {
         if(id == conn.user_id){
           is_online = true
           conn.connection.send(JSON.stringify({
-              offer:self.offer
+              offer:self.offer,
+              other_id:self.my_id
           }))
           console.log('offer is sent');
           
@@ -211,9 +212,9 @@ wsServer.on('request', function(request) {
     }
 
     if('answer' in self){
-      console.log('answer is accepted');
       
       let id = self.id;
+      
       let is_online = false
       connections.forEach(conn => {
         if(id == conn.user_id){
@@ -223,12 +224,12 @@ wsServer.on('request', function(request) {
           }))
           console.log('answer is sent')
         }
-        if(!is_online)
+      }) 
+      if(!is_online)
         connection.send(JSON.stringify({
           answer:null,
           status:400
-        }))
-      }) 
+      }))
     }
 
     if('start_call' in self){
